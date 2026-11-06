@@ -8,7 +8,11 @@ export const users = pgTable("users", {
     name: text("name"),
     imageUrl: text("image_url"),    // imageUrl(key) koristis u kodu, a image_url(value) u bazi  
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    // updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })    // coderabbit predlog 
+        .notNull()
+        .defaultNow()
+        .$onUpdate(() => new Date()),
 });
 
 export const products = pgTable("products", {
@@ -75,3 +79,4 @@ export type NewProduct = typeof products.$inferInsert; // id, createdAt, updated
 export type Comment = typeof comments.$inferSelect;   // Comment tip koji sadrzi sve kolone iz comments tabele
 export type NewComment = typeof comments.$inferInsert; // id, createdAt mogu biti undefined
 
+// 1:10:00
