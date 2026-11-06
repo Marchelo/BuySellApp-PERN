@@ -23,18 +23,29 @@ export const getUserById = async (id:string) => {       // GET_ONE
 
 export const updateUser = async (id:string, data:Partial<NewUser>) => {  // UPDATE
     // Partial<NewUser> - TS specificno, omogucavanje menjanje samo odredjene vrednosti u objektu ne moras sve da menjas, recimo azuriras samo email
+    const existingUser = await getUserById(id);
+    if(!existingUser){
+        throw new Error(`User with id ${id} not found!`);
+    }
     const [user] = await db.update(users).set(data).where(eq(users.id, id)).returning()
     return user
 };
 // upsert - moze da uradi ili insert ili update
 export const upsertUser = async(data:NewUser) => {      // Hibrid UPDATE/INSERT
-    const existingUser = await getUserById(data.id)
-    
-    // ako user postoji samo ga update
-    if(existingUser)    return updateUser(data.id, data)
-  
-    // u suprotnom ga napravi
-    createUser(data)
+    // --- ovo je tvoj kod ---
+    // const existingUser = await getUserById(data.id)
+    // // ako user postoji samo ga update
+    // if(existingUser)    return updateUser(data.id, data)
+    // // u suprotnom ga napravi
+    // createUser(data)
+
+    // --- predlozene ispravke od codeRabbit-a
+    const [user] = await db.insert(users).values(data).onConflictDoUpdate({
+        target: users.id,
+        set: data,
+      })
+      .returning();
+    return user;
 };
 
 // =========================== PRODUCT QUERIES ===========================
@@ -73,11 +84,19 @@ export const getProductsByUserId = async (userId:string) => {   // GET_BY_USER_I
 };
 
 export const updateProduct = async (id:string, data:Partial<NewProduct>) => {   // UPDATE
+    const existingProduct = await getProductById(id);
+    if(!existingProduct){
+        throw new Error(`Product with id ${id} not found!`);
+    }
     const [product] = await db.update(products).set(data).where(eq(products.id, id)).returning()
     return product
 };
 
 export const deleteProduct = async (id:string) => {
+    const existingProduct = await getProductById(id);
+    if(!existingProduct){
+        throw new Error(`Product with id ${id} not found!`);
+    }
     const [product] = await db.delete(products).where(eq(products.id, id)).returning()
     return product;
 };
@@ -89,6 +108,10 @@ export const createComment = async (data:NewComment) => {       // CREATE
 };
 
 export const deleteComment = async (id:string) => {
+    const existingComment = await getCommentById(id);
+    if(!existingComment){
+        throw new Error(`Comment with id ${id} not found!`);
+    }
     const [comment] = await db.delete(comments).where(eq(comments.id, id)).returning();
     return comment;
 };
